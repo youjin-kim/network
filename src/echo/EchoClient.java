@@ -1,8 +1,10 @@
 package echo;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Scanner;
@@ -11,55 +13,55 @@ public class EchoClient {
 	private static String SERVER_IP = "192.168.1.10";
 	private static int SERVER_PORT = 8500;
 
-	public static void main(String[] args) { //입력 무한 루프, exit 종료
+	public static void main(String[] args) {
 		Socket socket = null;
+		Scanner scanner = null;
 		
 		try {
-			//1. 소켓생성
+			//1. Scanner 생성
+			scanner = new Scanner(System.in);
+			
+			//2. 소켓생성
 			socket = new Socket();
 			
-			//2. 서버연결
-			InetSocketAddress inetSocktAddress = new InetSocketAddress(SERVER_IP, SERVER_PORT);
-			socket.connect(inetSocktAddress);
+			//3. 서버연결
+			socket.connect(new InetSocketAddress(SERVER_IP, SERVER_PORT));
 			
-			System.out.println("[ECHOClient] connected");
+			log("connected");
 			
-			//3. IOStream 받아오기
-			InputStream is = socket.getInputStream();
-			OutputStream os = socket.getOutputStream();
+			//4. IOStream 생성하기
+			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+			PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
 			
-			Scanner scanner = new Scanner(System.in);
-			String str = null;
-			
-			//4. 쓰기
 			while(true) {
+				//5. 키보드 입력
 				System.out.print(">> ");
-				str = scanner.nextLine();
-				
+				String str = scanner.nextLine();
 				if (str.equals("exit")) {
 					break;
 				}
 				
-				os.write(str.getBytes("UTF-8"));
-				
-				//5. 읽기
-				byte[] buffer = new byte[256];
-				int readByteCount = is.read(buffer); // Blocking
-				
-				if (readByteCount == -1) {
-					System.out.println("[ECHOServer] closed by client");
-					return;
+				//6. 데이터 쓰기(전송)
+				pw.println(str);
+
+				//7. 데이터 읽기(수신)
+				String data = br.readLine();
+				if (data == null) {
+					log("closed by client");
+					break;
 				}
 				
-				str = new String(buffer, 0, readByteCount, "UTF-8");
-				System.out.println("<< " + str);
-			
+				//8. 콘솔 출력
+				System.out.println("<< " + data);
 			}
 			
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
 			try {
+				if(scanner != null) {
+					scanner.close();
+				}
 				if(socket != null && socket.isClosed() == false) {
 					socket.close();
 				}
@@ -69,5 +71,10 @@ public class EchoClient {
 		}
 
 	}
+	
+	private static void log(String log) {
+		System.out.println("[Echo Client] " + log);
+	}
 
 }
+

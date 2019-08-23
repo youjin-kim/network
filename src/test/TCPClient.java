@@ -18,31 +18,30 @@ public class TCPClient {
 			socket = new Socket();
 			
 			//2. 서버연결
-			InetSocketAddress inetSocktAddress = new InetSocketAddress(SERVER_IP, SERVER_PORT);
-			socket.connect(inetSocktAddress);
-			
+			InetSocketAddress inetSocketAddress = 
+					new InetSocketAddress(SERVER_IP, SERVER_PORT);
+			socket.connect(inetSocketAddress);
 			System.out.println("[TCPClient] connected");
 			
 			//3. IOStream 받아오기
 			InputStream is = socket.getInputStream();
 			OutputStream os = socket.getOutputStream();
-			
+ 
 			//4. 쓰기
-			String data = "Hello World\n";
+			String data = "안녕하세요\n";
 			os.write(data.getBytes("UTF-8"));
 			
 			//5. 읽기
 			byte[] buffer = new byte[256];
-			int readByteCount = is.read(buffer); // Blocking
-			if (readByteCount == -1) {
-				System.out.println("[TCPServer] closed by client");
+			int readByteCount = is.read(buffer); //Blocking
+			if(readByteCount == -1) {
+				System.out.println("[TCPClient] closed by client");
 				return;
 			}
-			
-			data = new String(buffer, 0, readByteCount, "UTF-8");
-			System.out.println("[TCPServer] received: " + data);
-	
 		
+			data = new String(buffer, 0, readByteCount, "UTF-8");
+			System.out.println("[TCPClient] received:" + data);
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -55,7 +54,5 @@ public class TCPClient {
 			}
 		}
 		
-
 	}
-
 }
