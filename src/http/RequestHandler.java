@@ -11,6 +11,7 @@ import java.nio.file.Files;
 
 public class RequestHandler extends Thread {
 	private Socket socket;
+	private String msg = null;
 	
 	public RequestHandler( Socket socket ) {
 		this.socket = socket;
@@ -54,6 +55,7 @@ public class RequestHandler extends Thread {
 				responseStaticResource(outputStream, tokens[1], tokens[2]);
 			} else {  //POST, PUT, DELETE 명령은 무시
 				consoleLog("bad request: " + request);
+				msg = " 400 Bad Request\r\n";
 				response400Error(outputStream, tokens[2]);     //과제
 			}
 			
@@ -80,15 +82,19 @@ public class RequestHandler extends Thread {
 		}			
 	}
 	
+	
 	private void responseStaticResource(OutputStream outputStream, String url, String protocol) throws IOException {
+		
 		if("/".equals(url)) {     //"/"가 중요!! /뒤부터 url -> 파일
 			url = "/index.html";
+			msg = " 200 OK\r\n";
 		}
 		
 		File file = new File("./webapp" + url);
 		if(file.exists() == false) {
+			msg = " 404 File Not Found\r\n";
 			response404Error(outputStream, protocol);    
-			consoleLog("File Not Found: " + url);		  
+			consoleLog("File Not Found: " + url);
 			return;
 		}
 		
@@ -97,39 +103,21 @@ public class RequestHandler extends Thread {
 		String contentType = Files.probeContentType(file.toPath());
 		
 		//응답
-		outputStream.write( (protocol + " 200 OK\r\n").getBytes( "UTF-8" ) );   //헤더시작
+		outputStream.write( (protocol + msg).getBytes( "UTF-8" ) );   //헤더시작
 		outputStream.write( ("Content-Type:" + contentType + "; charset=utf-8\r\n").getBytes( "UTF-8" ) ); //헤더끝
 		outputStream.write( "\r\n".getBytes() );  //브라우져에서 공백이 있으면 그 밑이 바디라고 인식
 		outputStream.write( body );
 		
 	}
 	
-	private void response400Error(OutputStream outputStream, String protocol) throws IOException {
-		File file = new File("./webapp/error/400.html"); 
-		
-		//nio
-		byte[] body = Files.readAllBytes(file.toPath());
-		String contentType = Files.probeContentType(file.toPath());
-
-		// 응답
-		outputStream.write((protocol + " 400 Bad Request\r\n").getBytes("UTF-8")); // 헤더시작
-		outputStream.write(("Content-Type:" + contentType + "; charset=utf-8\r\n").getBytes("UTF-8")); // 헤더끝
-		outputStream.write("\r\n".getBytes()); // 바디
-		outputStream.write(body);
+	private void response400Error(OutputStream outputStream, String protocol) throws IOException { 
+		String url = "/error/400.html";
+		responseStaticResource(outputStream, url, protocol);
 	}
 	
-	private void response404Error(OutputStream outputStream, String protocol) throws IOException {
-		File file = new File("./webapp/error/404.html"); 
-		
-		//nio
-		byte[] body = Files.readAllBytes(file.toPath());
-		String contentType = Files.probeContentType(file.toPath());
-
-		// 응답
-		outputStream.write((protocol + " 404 File Not Found\r\n").getBytes("UTF-8")); // 헤더시작
-		outputStream.write(("Content-Type:" + contentType + "; charset=utf-8\r\n").getBytes("UTF-8")); // 헤더끝
-		outputStream.write("\r\n".getBytes()); // 바디
-		outputStream.write(body);
+	private void response404Error(OutputStream outputStream, String protocol) throws IOException { 
+		String url = "/error/404.html";
+		responseStaticResource(outputStream, url, protocol);
 	}
 
 	public void consoleLog( String message ) {
