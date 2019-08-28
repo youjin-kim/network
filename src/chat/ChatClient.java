@@ -16,8 +16,7 @@ public class ChatClient {
 	public static void main(String[] args) {
 		Scanner scanner = null;
 		Socket socket = null;
-		BufferedReader bufferedReader = null;
-		
+
 		try {
 			// 1. 키보드 연결
 			scanner = new Scanner(System.in);
@@ -30,17 +29,17 @@ public class ChatClient {
 			log("connected");
 
 			// 4. reader/writer 생성
-			bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 			PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
 
 			// 5. join 프로토콜
 			System.out.print("닉네임>>");
 			String nickname = scanner.nextLine();
 			printWriter.println("join:" + nickname);
-			//printWriter.flush();
+			printWriter.flush();
 
 			// 6. ChatClientThread 시작
-			ChatClientThread cct = new ChatClientThread(bufferedReader);
+			ChatClientThread cct = new ChatClientThread(socket);
 			cct.start();
 
 			// 7. 키보드 입력 처리
@@ -49,12 +48,13 @@ public class ChatClient {
 
 				if ("quit".equals(input)) {
 					// 8. quit 프로토콜 처리
-					printWriter.println("quit");
+					printWriter.println("quit:");
 					break;
+				} else {
+					// 9. 메시지 처리
+					printWriter.println("message:" + input);
 				}
-				// 9. 메시지 처리
-				printWriter.println("message:" + input);
-			
+
 			}
 
 		} catch (IOException ex) {
@@ -64,7 +64,7 @@ public class ChatClient {
 				if (scanner != null) {
 					scanner.close();
 				}
-				if (bufferedReader == null && socket != null && socket.isClosed() == false) {
+				if (socket != null && socket.isClosed() == false) {
 					socket.close();
 				}
 			} catch (IOException e) {

@@ -32,7 +32,7 @@ public class ChatServerThread extends Thread {
 				
 				if (request == null) {
 					ChatServer.log("클라이언트로 부터 연결 끊김");
-					doQuit(printWriter);
+					
 					break;
 				}
 
@@ -51,7 +51,7 @@ public class ChatServerThread extends Thread {
 			}
 
 		} catch (IOException e) {
-			ChatServer.log(this.nickname + "님이 채팅방을 나갔습니다.");
+			e.printStackTrace();
 		} finally {
 			if (socket != null && socket.isClosed() == false) {
 				try {
@@ -101,7 +101,7 @@ public class ChatServerThread extends Thread {
 		ChatServer.log("receive: " + message);
 	}
 
-	private void doQuit(PrintWriter writer) {
+	private void doQuit(Writer writer) {
 		removeWriter(writer);
 		String data = this.nickname + "님이 퇴장 하였습니다.";
 		broadcast(data);
